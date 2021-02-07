@@ -7,3 +7,6 @@ This project will also form part of the Reactive programming part of the course.
 
 Like other projects on the course, we use CircleCI to automate and signify the completion of building and testing 
 of the project. Deployment to a cloud service is not part of the project at this stage.
+
+The reader is directed to the unit and integration tests of the project to better appreciate the use of data streams and 
+block() when retrieving data.
