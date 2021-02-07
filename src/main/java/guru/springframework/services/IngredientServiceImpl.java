@@ -39,16 +39,19 @@ public class IngredientServiceImpl implements IngredientService {
     @Override
     public Mono<IngredientCommand> findByRecipeIdAndIngredientId(String recipeId, String ingredientId) {
 
-        return recipeReactiveRepository.findById(recipeId)
-                .map(recipe -> recipe.getIngredients()
-                        .stream()
-                        .filter(ingredient -> ingredient.getId().equalsIgnoreCase(ingredientId))
-                        .findFirst())
-                .filter(Optional::isPresent)
+        return recipeReactiveRepository
+                // get the list of ingredients from the recipe with ID recipeId
+                .findById(recipeId)
+                .flatMapIterable(Recipe::getIngredients)
+                // use the Flux of ingredients and see if an ingredient has ingredientId
+                .filter(ingredient -> ingredient.getId().equalsIgnoreCase(ingredientId))
+                // send out the ingredient* with ingredientId
+                .single()
+                // convert ingredient POJO into IngredientCommand and set the same recipeId
                 .map(ingredient -> {
-                    IngredientCommand command = ingredientToIngredientCommand.convert(ingredient.get());
+                    IngredientCommand command = ingredientToIngredientCommand.convert(ingredient);
                     command.setRecipeId(recipeId);
-                    return command;
+                    return command;     // *this is a unit set so it's safe to return on first iteration
                 });
     }
 
