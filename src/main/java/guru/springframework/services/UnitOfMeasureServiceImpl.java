@@ -25,16 +25,6 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
         this.unitOfMeasureReactiveRepository = unitOfMeasureReactiveRepository;
     }
 
-    // previous non-Reactive listAllUoms()
-    //    @Override
-//    public Set<UnitOfMeasureCommand> listAllUoms() {
-//
-//        return StreamSupport.stream(unitOfMeasureRepository.findAll()
-//                .spliterator(), false)
-//                .map(unitOfMeasureToUnitOfMeasureCommand::convert)
-//                .collect(Collectors.toSet());
-//    }
-
     // this provides a stream of UOMs; to grab one, call block() (see UOMController and Impl test for examples)
     @Override
     public Flux<UnitOfMeasureCommand> listAllUoms() {
