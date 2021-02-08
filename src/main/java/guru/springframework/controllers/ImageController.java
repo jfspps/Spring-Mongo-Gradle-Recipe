@@ -34,15 +34,17 @@ public class ImageController {
 
     @GetMapping("recipe/{id}/image")
     public String showUploadForm(@PathVariable String id, Model model){
-        model.addAttribute("recipe", recipeService.findCommandById(id));
+        model.addAttribute("recipe", recipeService.findCommandById(id).block());
 
         return "recipe/imageuploadform";
     }
 
+    // note here that MultipartFile (part of Servlet container) is blocking and so saving an image may appear a bit slow (the UI renders well before
+    // the image the saved to the database instead of waiting for the image to save and then rendering)
     @PostMapping("recipe/{id}/image")
     public String handleImagePost(@PathVariable String id, @RequestParam("imagefile") MultipartFile file){
 
-        imageService.saveImageFile(id, file);
+        imageService.saveImageFile(id, file).block();
 
         return "redirect:/recipe/" + id + "/show";
     }
