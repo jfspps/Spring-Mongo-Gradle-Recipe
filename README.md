@@ -12,7 +12,7 @@ The reader is directed to the unit and integration tests of the project to bette
 block() when retrieving data.
 
 The refactoring from WebMVS to WebFlux starts with a new branch 'webflux'. At the time of course completion, many of the 
-features of reactive programming with Spring were not completely understood and hence some of the blocking code remains 
+features of reactive programming with Spring were not completely understood and hence some of the code remains 
 blocking. This demonstration is really a work in progress.
 
 When working with reactive controllers and services and non-reactive templates (such as WebMVC), one returns 
