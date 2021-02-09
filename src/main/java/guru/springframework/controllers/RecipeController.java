@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.support.WebExchangeBindException;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
@@ -50,21 +51,14 @@ public class RecipeController {
         return RECIPE_RECIPEFORM_URL;
     }
 
+    // Mono<> holds the data and any related errors, hence BindingResult not required
     @PostMapping("recipe")
-    public String saveOrUpdate(@Valid @ModelAttribute("recipe") RecipeCommand command, BindingResult bindingResult){
-
-        if(bindingResult.hasErrors()){
-
-            bindingResult.getAllErrors().forEach(objectError -> {
-                log.debug(objectError.toString());
-            });
-
-            return RECIPE_RECIPEFORM_URL;
-        }
-
-        Mono<RecipeCommand> savedCommand = recipeService.saveRecipeCommand(command);
-
-        return "redirect:/recipe/" + savedCommand.block().getId() + "/show";
+    public Mono<String> saveOrUpdate(@Valid @ModelAttribute("recipe") Mono<RecipeCommand> command){
+        return command
+                .flatMap(recipeService::saveRecipeCommand)
+                .map(recipe -> "redirect:/recipe/" + recipe.getId() + "/show")
+                .doOnError(thr -> log.error("Error saving recipe"))
+                .onErrorResume(WebExchangeBindException.class, thr -> Mono.just(RECIPE_RECIPEFORM_URL));
     }
 
     @GetMapping("recipe/{id}/delete")
