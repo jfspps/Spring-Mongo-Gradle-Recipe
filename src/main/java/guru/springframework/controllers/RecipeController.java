@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.thymeleaf.exceptions.TemplateInputException;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
@@ -71,7 +72,7 @@ public class RecipeController {
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(NotFoundException.class)
+    @ExceptionHandler({NotFoundException.class, TemplateInputException.class})
     public String handleNotFound(Exception exception, Model model){
 
         log.error("Handling not found exception");
@@ -79,6 +80,6 @@ public class RecipeController {
 
         model.addAttribute("exception", exception);
 
-        return "recipe/404error";
+        return "404error";
     }
 }
