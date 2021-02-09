@@ -61,7 +61,6 @@ public class IngredientServiceImpl implements IngredientService {
         Optional<Recipe> recipeOptional = recipeReactiveRepository.findById(ingredientCommand.getRecipeId()).blockOptional();
 
         if(!recipeOptional.isPresent()){
-            //todo toss error if not found!
             log.error("Recipe not found for id: " + ingredientCommand.getRecipeId());
             return Mono.just(new IngredientCommand());
         } else {

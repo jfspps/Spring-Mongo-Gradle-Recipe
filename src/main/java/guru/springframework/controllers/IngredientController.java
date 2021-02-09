@@ -37,8 +37,8 @@ public class IngredientController {
         log.debug("Getting ingredient list for recipe id: " + recipeId);
 
         // use command object to avoid lazy load errors in Thymeleaf.
-        // add toProcessor to allow for blocking amongst other properties
-        model.addAttribute("recipe", recipeService.findCommandById(recipeId).toProcessor().block());
+        // return reactive Mono to template
+        model.addAttribute("recipe", recipeService.findCommandById(recipeId));
 
         return "recipe/ingredient/list";
     }
@@ -46,8 +46,8 @@ public class IngredientController {
     @GetMapping("recipe/{recipeId}/ingredient/{id}/show")
     public String showRecipeIngredient(@PathVariable String recipeId,
                                        @PathVariable String id, Model model){
-        // add toProcessor to allow for blocking amongst other properties
-        model.addAttribute("ingredient", ingredientService.findByRecipeIdAndIngredientId(recipeId, id).toProcessor().block());
+        // return reactive type, Mono
+        model.addAttribute("ingredient", ingredientService.findByRecipeIdAndIngredientId(recipeId, id));
         return "recipe/ingredient/show";
     }
 
@@ -67,18 +67,18 @@ public class IngredientController {
         ingredientCommand.setUom(new UnitOfMeasureCommand());
 
 //        model.addAttribute("uomList",  unitOfMeasureService.listAllUoms());
-        // refactored reactively; note that we collect elements from Flux and block the data stream
-        model.addAttribute("uomList", unitOfMeasureService.listAllUoms().collectList().block());
+        // refactored reactively; note that we collect and return elements from Flux to WebFlux based template
+        model.addAttribute("uomList", unitOfMeasureService.listAllUoms());
         return "recipe/ingredient/ingredientform";
     }
 
     @GetMapping("recipe/{recipeId}/ingredient/{id}/update")
     public String updateRecipeIngredient(@PathVariable String recipeId,
                                          @PathVariable String id, Model model){
-        // add toProcessor to allow for blocking amongst other properties
+        // add toProcessor to allow for blocking amongst other properties (not sure yet why this has to be blocked)
         model.addAttribute("ingredient", ingredientService.findByRecipeIdAndIngredientId(recipeId, id).toProcessor().block());
 
-        model.addAttribute("uomList", unitOfMeasureService.listAllUoms().collectList().toProcessor().block());
+        model.addAttribute("uomList", unitOfMeasureService.listAllUoms());
         return "recipe/ingredient/ingredientform";
     }
 
