@@ -9,7 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.bind.support.WebExchangeBindException;
+import org.thymeleaf.exceptions.TemplateInputException;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
@@ -31,7 +32,8 @@ public class RecipeController {
     @GetMapping("/recipe/{id}/show")
     public String showById(@PathVariable String id, Model model){
 
-        model.addAttribute("recipe", recipeService.findById(id).block());
+        // allow recipe to be reactive: a Mono<Recipe> is sent ot the template
+        model.addAttribute("recipe", recipeService.findById(id));
 
         return "recipe/show";
     }
@@ -45,25 +47,19 @@ public class RecipeController {
 
     @GetMapping("recipe/{id}/update")
     public String updateRecipe(@PathVariable String id, Model model){
-        model.addAttribute("recipe", recipeService.findCommandById(id).block());
+        // add toProcessor to allow for blocking amongst other properties
+        model.addAttribute("recipe", recipeService.findCommandById(id).toProcessor().block());
         return RECIPE_RECIPEFORM_URL;
     }
 
+    // Mono<> holds the data and any related errors, hence BindingResult not required
     @PostMapping("recipe")
-    public String saveOrUpdate(@Valid @ModelAttribute("recipe") RecipeCommand command, BindingResult bindingResult){
-
-        if(bindingResult.hasErrors()){
-
-            bindingResult.getAllErrors().forEach(objectError -> {
-                log.debug(objectError.toString());
-            });
-
-            return RECIPE_RECIPEFORM_URL;
-        }
-
-        Mono<RecipeCommand> savedCommand = recipeService.saveRecipeCommand(command);
-
-        return "redirect:/recipe/" + savedCommand.block().getId() + "/show";
+    public Mono<String> saveOrUpdate(@Valid @ModelAttribute("recipe") Mono<RecipeCommand> command){
+        return command
+                .flatMap(recipeService::saveRecipeCommand)
+                .map(recipe -> "redirect:/recipe/" + recipe.getId() + "/show")
+                .doOnError(thr -> log.error("Error saving recipe"))
+                .onErrorResume(WebExchangeBindException.class, thr -> Mono.just(RECIPE_RECIPEFORM_URL));
     }
 
     @GetMapping("recipe/{id}/delete")
@@ -76,18 +72,14 @@ public class RecipeController {
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(NotFoundException.class)
-    public ModelAndView handleNotFound(Exception exception){
+    @ExceptionHandler({NotFoundException.class, TemplateInputException.class})
+    public String handleNotFound(Exception exception, Model model){
 
         log.error("Handling not found exception");
         log.error(exception.getMessage());
 
-        ModelAndView modelAndView = new ModelAndView();
+        model.addAttribute("exception", exception);
 
-        modelAndView.setViewName("404error");
-        modelAndView.addObject("exception", exception);
-
-        return modelAndView;
+        return "404error";
     }
-
 }

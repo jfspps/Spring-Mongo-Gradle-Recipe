@@ -23,7 +23,8 @@ public class IndexController {
     public String getIndexPage(Model model) {
         log.debug("Getting Index page");
 
-        model.addAttribute("recipes", recipeService.getRecipes().collectList().block());
+        // add toProcessor to allow for blocking amongst other properties
+        model.addAttribute("recipes", recipeService.getRecipes().collectList().toProcessor().block());
 
         return "index";
     }

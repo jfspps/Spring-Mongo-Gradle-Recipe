@@ -30,7 +30,10 @@ repositories {
 dependencies {
 	compile('org.springframework.boot:spring-boot-starter-data-mongodb')
 	compile('org.springframework.boot:spring-boot-starter-thymeleaf')
-	compile('org.springframework.boot:spring-boot-starter-web')
+//	Spring WebMVC (cannot be executed with WebFlux, the next item)
+//	compile('org.springframework.boot:spring-boot-starter-web')
+	compile('org.springframework.boot:spring-boot-starter-webflux')
+
 	runtime('org.springframework.boot:spring-boot-devtools')
 	//	embedded MongoDB
 	compile('de.flapdoodle.embed:de.flapdoodle.embed.mongo')
@@ -40,6 +43,7 @@ dependencies {
 	compile 'org.webjars:bootstrap:3.3.7-1'
 	compileOnly('org.projectlombok:lombok')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
+	testCompile('io.projectreactor:reactor-test')
 }
 
 //export test coverage
