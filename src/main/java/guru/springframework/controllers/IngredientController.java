@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -36,6 +37,12 @@ public class IngredientController {
     @InitBinder("ingredient")
     public void initBinder(WebDataBinder webDataBinder){
         this.webDataBinder = webDataBinder;
+    }
+
+    // remove duplicated code (run for all methods in this controller)
+    @ModelAttribute("uomList")
+    public Flux<UnitOfMeasureCommand> addModelUOMList(){
+        return unitOfMeasureService.listAllUoms();
     }
 
     @GetMapping("/recipe/{recipeId}/ingredients")
@@ -74,7 +81,6 @@ public class IngredientController {
 
 //        model.addAttribute("uomList",  unitOfMeasureService.listAllUoms());
         // refactored reactively; note that we collect and return elements from Flux to WebFlux based template
-        model.addAttribute("uomList", unitOfMeasureService.listAllUoms());
         return "recipe/ingredient/ingredientform";
     }
 
@@ -83,13 +89,11 @@ public class IngredientController {
                                          @PathVariable String id, Model model){
         // add toProcessor to allow for blocking amongst other properties (not sure yet why this has to be blocked)
         model.addAttribute("ingredient", ingredientService.findByRecipeIdAndIngredientId(recipeId, id).toProcessor().block());
-
-        model.addAttribute("uomList", unitOfMeasureService.listAllUoms());
         return "recipe/ingredient/ingredientform";
     }
 
     @PostMapping("recipe/{recipeId}/ingredient")
-    public String saveOrUpdate(@PathVariable String recipeId, @ModelAttribute("ingredient") IngredientCommand command, Model model){
+    public String saveOrUpdate(@PathVariable String recipeId, @ModelAttribute("ingredient") IngredientCommand command){
 
         webDataBinder.validate();
         BindingResult bindingResult = webDataBinder.getBindingResult();
@@ -98,10 +102,10 @@ public class IngredientController {
             bindingResult.getAllErrors().forEach(error -> {
                 log.debug(error.toString());
             });
-            model.addAttribute("uomList", unitOfMeasureService.listAllUoms());
             return "recipe/ingredient/ingredientform";
         }
 
+        // todo: saveIngredientCommand needs fixing
         IngredientCommand savedCommand = ingredientService.saveIngredientCommand(command).block();
         log.debug("saved recipe id:" + recipeId);
         log.debug("saved ingredient id:" + command.getId());
